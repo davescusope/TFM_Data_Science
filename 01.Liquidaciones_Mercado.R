@@ -1,3 +1,14 @@
+# Instruction to measure how much time does it take in my machine   <<<<<Time difference of 2.439813 hours>>>>>>
+Start_Time <- Sys.time()
+###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+
 list.of.packages <- c("dplyr", "tidyverse", "ggplot2", "tidyr", 'lubridate','viridis','R.utils' )
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
@@ -87,7 +98,7 @@ liquidaciones_mercado %>%
 liquidaciones_mercado %>% 
   distinct(ID_GRUPO_EMPRESARIAL)
 
-COMPANIES <-c("ENDESA","GAS NATURAL FENOSA","IBERDROLA")
+COMPANIES <-c("EMPRESA1","EMPRESA3","EMPRESA2")
 
 
 rm(liquidaciones_mercado)
@@ -169,11 +180,6 @@ Amount_Total <- data.frame()
 Power_Total <- data.frame()
 
 rm(Header)
-#print(paste('Processing rows:', Start_chunk, 'to', End_chunk))
-#dftest2 <- read.csv(file=data_path,header = F, sep = ";", quote = "\"",
-#                   dec = ".", fill = TRUE, comment.char = "", skip = Start_chunk, nrows=End_chunk)
-
-
 
 
 #We create now the loop for importing a huge file , process it and save just the result desired
@@ -205,11 +211,7 @@ repeat {
 }
 
 #Rename the columnames with the Header_names from the begining and delete all the variables used
-rm(Chunk)  
-rm(Header_names,dftest2,End_chunk,Last_row,Start_chunk,Chunk_size) 
-rm(liq_merc_amount,liq_merc_power)
-rm(Amount,Power)
-rm(colnames,COMB_TECH,COMPANIES,data_path)
+
 
 
 ##############
@@ -232,19 +234,27 @@ write.table(Power_Total,
 #write.table(Power_Total, file = "Power_liq_processed.csv",row.names=FALSE, sep = ";")
 
 
-
-##############
-
-
-
+End_Time <- Sys.time()
+Duration_Process <- End_Time - Start_Time
+Duration_Process
 
 
-
+rm(Chunk)  
+rm(Header_names,End_chunk,Last_row,Start_chunk,Chunk_size) 
+rm(liq_merc_amount,liq_merc_power)
+rm(Amount,Power)
+rm(colnames,COMB_TECH,COMPANIES,data_path)
+rm(End_Time,Start_Time,Duration_Process)
 
 ###############################################################################################################
 ###############################################################################################################
 ###############################################################################################################
 ###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+
 
 
 
