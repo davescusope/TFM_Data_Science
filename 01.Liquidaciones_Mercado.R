@@ -195,7 +195,7 @@ repeat {
   
   if (inherits(Chunk, "try-error")) break
   
-  
+  #Rename the columnames with the Header_names from the begining and delete all the variables used  
   names(Chunk) <- Header_names 
   
   liq_merc_amount  <- Amount(Chunk)
@@ -210,11 +210,48 @@ repeat {
   
 }
 
-#Rename the columnames with the Header_names from the begining and delete all the variables used
+
 
 
 
 ##############
+
+# A last data treatment has become necessary since there could be duplicated lines just on the border of every section for the chunk-rbind process
+MARKETS <- Amount_Total %>% distinct(ID_MERCADO_ELECTRICO)
+MARKETS <- MARKETS[MARKETS != "Energia SEIE" ]
+MARKETS <- MARKETS[MARKETS != "G. Potencia SEIE" ]
+
+
+
+Amount_Total <- Amount_Total %>%
+  select(-c(ID_SOCIEDAD_AGENTE,ID_RDLCN,ID_GRUPO,ID_CONTRATO_BILATERAL)) %>%
+  filter(ID_MERCADO_ELECTRICO %in% MARKETS) %>% 
+  rename(VERSION = FC_PERIODO ) %>%
+  rename(ID_CONCEPTO_CTRL = ID_MERCADO_ELECTRICO) %>%
+  group_by(VERSION,ID_UPR,ID_GRUPO_EMPRESARIAL,ID_TECNOLOGIA,ID_CONCEPTO_CTRL,ID_UNIDAD) %>% 
+  summarise(I_N_TOT=sum(I_N_TOT)) %>% 
+  rename(VALOR = I_N_TOT) %>%
+  mutate(VALOR = format(VALOR, decimal.mark=",")) %>% 
+  as.data.frame() %>% 
+  arrange(VERSION)
+  
+
+Power_Total <- Power_Total %>%
+  select(-c(ID_SOCIEDAD_AGENTE,ID_RDLCN,ID_GRUPO,ID_CONTRATO_BILATERAL)) %>%
+  filter(ID_MERCADO_ELECTRICO %in% MARKETS) %>% 
+  rename(VERSION = FC_PERIODO ) %>%
+  rename(ID_CONCEPTO_CTRL = ID_MERCADO_ELECTRICO) %>%
+  group_by(VERSION,ID_UPR,ID_GRUPO_EMPRESARIAL,ID_TECNOLOGIA,ID_CONCEPTO_CTRL,ID_UNIDAD) %>% 
+  summarise(Q_N_TOT=sum(Q_N_TOT)) %>% 
+  rename(VALOR = Q_N_TOT) %>%
+  mutate(VALOR = format(VALOR, decimal.mark=",")) %>% 
+  as.data.frame() %>% 
+  arrange(VERSION)
+
+
+
+
+# I save them on csv for future calculations without launching it again
 
 write.table(Amount_Total, 
             file = str_c(getwd(),"/Outputs/LIQUIDACIONES_EUROS.csv", sep = "", collapse = NULL),
@@ -230,9 +267,6 @@ write.table(Power_Total,
 
 
 
-#write.table(Amount_Total, file = "Amount_liq_processed.csv",row.names=FALSE, sep = ";")
-#write.table(Power_Total, file = "Power_liq_processed.csv",row.names=FALSE, sep = ";")
-
 
 End_Time <- Sys.time()
 Duration_Process <- End_Time - Start_Time
@@ -243,7 +277,7 @@ rm(Chunk)
 rm(Header_names,End_chunk,Last_row,Start_chunk,Chunk_size) 
 rm(liq_merc_amount,liq_merc_power)
 rm(Amount,Power)
-rm(colnames,COMB_TECH,COMPANIES,data_path)
+rm(colnames,COMB_TECH,COMPANIES,MARKETS,data_path)
 rm(End_Time,Start_Time,Duration_Process)
 
 ###############################################################################################################

@@ -140,7 +140,9 @@ RESULTADO_E4E <- RESULTADO_E4E %>%
          (VALOR - lag(VALOR)),
          VALOR)) %>% 
   mutate(VALOR = if_else(is.na(new_value),VALOR,new_value)) %>% 
-  select(-c(ID_E4E_NODO,ANYO,new_value)) 
+  select(-c(ID_E4E_NODO,ANYO,new_value)) %>% 
+  mutate(VALOR = format(VALOR, decimal.mark=",")) %>% 
+  arrange(VERSION)
 
 RESULTADO_E4E <- RESULTADO_E4E[c(1,3,5,2,6,4,8,7)]
 
