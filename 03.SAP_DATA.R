@@ -62,7 +62,8 @@ REMOVABLE_CONCEPTS <- c("APLIC_LIQ_COB_CONTABLE",
                         "RELIQ_OTROS",
                         "RELIQ_PEAJE_GEN",
                         "RELIQ_SERV_GEST_RES",
-                        "RELIQ_VENTAS_SEIE"
+                        "RELIQ_VENTAS_SEIE",
+                        "SERV_GEST_RES"
                         )
 
 

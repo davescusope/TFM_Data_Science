@@ -51,6 +51,7 @@ Nuclear_Wastes <- Import_Nuclear_Wastes %>%
   mutate(ID_GRUPO_EMPRESARIAL ="EMPRESA1") %>%
   mutate(ID_AREA_SISTEMA = 'ESPAÑA') %>% 
   mutate(ID_TECNOLOGIA ="NC") %>% 
+  mutate(VALOR = VALOR * -1) %>% 
   mutate(VALOR = format(VALOR, decimal.mark=",")) %>% 
   arrange(VERSION)
 Nuclear_Wastes <-  Nuclear_Wastes[c(1,2,8,6,7,3,5,4)]
