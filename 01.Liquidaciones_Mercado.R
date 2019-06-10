@@ -280,303 +280,73 @@ rm(Amount,Power)
 rm(colnames,COMB_TECH,COMPANIES,MARKETS,data_path)
 rm(End_Time,Start_Time,Duration_Process)
 
+
+
 ###############################################################################################################
 ###############################################################################################################
+#########                                                                                         #############
+#########                       VISUALIZATION THE DATA WITH GGPLOT                                #############
+#########                                                                                         #############
 ###############################################################################################################
 ###############################################################################################################
-###############################################################################################################
-###############################################################################################################
-###############################################################################################################
-###############################################################################################################
 
 
+#Let's talke a fast look into the data so we can try to use GGplot with all its benefits and shortcomings
+#I prepare the df with basic changes by choosing only one year to inspect the data
 
-
-
-#Having the values daily summarized to use the total columns, we can now generate two different dataframes, one for the amount in Euros and the other one
-#for the vales of energy production in MWH. For that:
-  # Data cleaning for retaining just the desired information 
-  # Total-columns segregation according to the amount or the energy volume
-  # Creation of a summing columns which includes sells and buys
-  # Delete of the days with a net value equals zero for not having real presence or interaction with the markets
-  # Creation of the ID_UNIDAD column for its posterior discrimination
-  # Summarization of every value just in case there were two or more transaction on a single day (not very common)
-  # Restriction by technologies to those which give trustfull values in classical generation
-  # Restriction by companies to those three which this study is going to be focused. Later I will differentiate by any single one to train the models
-
-
-liq_merc_imp <- liquidaciones_mercado %>% 
-  select(-c(Q_V_TOT,Q_C_TOT,FC_EXTRACCION,FC_CARGA)) %>% 
-  mutate(I_N_TOT = I_V_TOT + I_C_TOT) %>% 
-  select(-c(I_V_TOT , I_C_TOT)) %>%
-  filter(I_N_TOT!=0) %>% 
-  filter( ID_TECNOLOGIA %in% COMB_TECH) %>% 
-  filter( ID_GRUPO_EMPRESARIAL %in% COMPANIES ) %>% 
-  mutate(FC_PERIODO = dmy_hms(FC_PERIODO)) %>% 
-  mutate(FC_PERIODO = format(as.Date(FC_PERIODO), "%Y%m")) %>% 
-  group_by(FC_PERIODO, ID_UPR, ID_SOCIEDAD_AGENTE, ID_GRUPO_EMPRESARIAL, ID_TECNOLOGIA, ID_RDLCN, ID_MERCADO_ELECTRICO,ID_GRUPO,ID_CONTRATO_BILATERAL,ID_TECNOLOGIA) %>% 
-  summarise(I_N_TOT=sum(I_N_TOT)) %>% 
-  mutate(ID_UNIDAD = "EUROS") %>%
-  as.data.frame()
-
-liq_merc_prod <- liquidaciones_mercado %>% 
-  select(-c(I_V_TOT,I_C_TOT,FC_EXTRACCION,FC_CARGA)) %>%
-  mutate(Q_N_TOT = Q_V_TOT + Q_C_TOT) %>% 
-  select(-c(Q_V_TOT,Q_C_TOT )) %>% 
-  filter(Q_N_TOT!=0) %>% 
-  filter( ID_TECNOLOGIA %in% COMB_TECH) %>% 
-  filter( ID_GRUPO_EMPRESARIAL %in% COMPANIES ) %>% 
-  mutate(FC_PERIODO = dmy_hms(FC_PERIODO)) %>% 
-  mutate(FC_PERIODO = format(as.Date(FC_PERIODO), "%Y%m")) %>% 
-  group_by(FC_PERIODO, ID_UPR, ID_SOCIEDAD_AGENTE, ID_GRUPO_EMPRESARIAL, ID_TECNOLOGIA, ID_RDLCN, ID_MERCADO_ELECTRICO,ID_GRUPO,ID_CONTRATO_BILATERAL,ID_TECNOLOGIA) %>% 
-  summarise(Q_N_TOT=sum(Q_N_TOT)) %>% 
-  mutate(ID_UNIDAD = "MWH") %>% 
-  as.data.frame()
-
-
-rm(liquidaciones_mercado)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#preparo el df con cambios basicos
-
-margen_detalles <- margen_detalles %>% 
+Amount_Inspection <- Amount_Total %>% 
   filter(VALOR != '') %>%
-  drop_na() %>% 
-  mutate(FC_PERIODO = dmy(FC_PERIODO)) %>% 
-  filter(FC_PERIODO > "2017-12-31" & FC_PERIODO <"2019-01-01")
-
-
-
-#---------------------------------------------------------------------------------------#
-#-----------------------------GR?FICA DE MARGEN_CENTRALES-------------------------------#
-#---------------------------------------------------------------------------------------#
-
-
-MARGEN_CENTRALES <- margen_detalles %>% 
-  select( ID_TIPO_PREVISION,FC_PERIODO, ID_UPR,ID_CENTRAL, ID_TECNOLOGIA, VALOR) %>%
-  filter(ID_TIPO_PREVISION == 'REAL') %>% 
-  filter(ID_CENTRAL != '') %>% 
-  drop_na() %>% 
-  group_by(ID_CENTRAL, ID_TECNOLOGIA) %>% 
-  summarise(VALOR=sum(VALOR)) %>%
-  arrange(VALOR) %>% 
-
-  ggplot(aes(x=reorder(ID_CENTRAL, -VALOR), y=VALOR ,color=ID_TECNOLOGIA, fill=ID_TECNOLOGIA))+ 
-  geom_bar(stat="identity")+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  geom_hline(yintercept = 0)+
-  theme(legend.position = "top")+
-  ggtitle("MARGEN_CENTRAL")
-
-MARGEN_CENTRALES
-
-
-
-
-
-
-
+  drop_na() %>%
+  mutate(VERSION= paste(VERSION, "01", sep="")) %>% 
+  mutate(VERSION = ymd(VERSION)) %>% 
+  filter(VERSION > "2017-12-31" & VERSION <"2019-01-01") %>% 
+  mutate(VALOR= as.numeric(gsub(",", ".", VALOR))) 
 
 #---------------------------------------------------------------------------------------#
-#------------------------------GR?FICA DE MARGEN_CENTRAL--------------------------------#
-#---------------------------------------------------------------------------------------#
-
-
-BARRAS_CENTRAL <- margen_detalles %>% 
-  select( ID_TIPO_PREVISION,FC_PERIODO, ID_UPR,ID_CENTRAL,ID_TECNOLOGIA, ID_CONCEPTO, VALOR) %>%
-  filter(ID_TIPO_PREVISION == 'REAL') %>% 
-  filter(ID_CENTRAL != '') %>% 
-  drop_na() %>% 
-  filter(!str_detect(ID_CONCEPTO, '^RELIQ_')) %>% 
-  filter(ID_CENTRAL == "ALMZ") %>%
-#  filter(between(FC_PERIODO , '01/01/2017','01/12/2017')) %>% 
-  group_by(ID_CENTRAL, ID_TECNOLOGIA, ID_CONCEPTO, FC_PERIODO) %>% 
-  summarise(VALOR=sum(VALOR)) %>%
-  arrange(VALOR) 
-  
-
-
-LINEA_CENTRAL <- margen_detalles %>% 
-  select( ID_TIPO_PREVISION,FC_PERIODO, ID_UPR,ID_CENTRAL,ID_TECNOLOGIA, ID_CONCEPTO, VALOR) %>%
-  filter(ID_TIPO_PREVISION == 'REAL') %>% 
-  filter(ID_CENTRAL != '') %>% 
-  drop_na() %>% 
-  filter(!str_detect(ID_CONCEPTO, '^RELIQ_')) %>% 
-  filter(ID_CENTRAL == "ALMZ") %>% 
-  group_by(ID_CENTRAL, ID_TECNOLOGIA, FC_PERIODO) %>% 
-  summarise(VALOR=sum(VALOR)) %>%
-  arrange(VALOR)
-
-
-
-#GRAFICAS
-MARGEN_CENTRAL <-
-ggplot(BARRAS_CENTRAL, aes(x=FC_PERIODO, y=VALOR ,color=ID_CONCEPTO, fill=ID_CONCEPTO))+ 
-  geom_bar(stat="identity")+
-  geom_hline(yintercept = 0)+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  theme(legend.position = "top")+
-  ggtitle("MARGEN_CENTRAL")
-
- MARGEN_CENTRAL
-
-MARGEN_CENTRAL <- 
-ggplot(LINEA_CENTRAL,aes(x=FC_PERIODO, y=VALOR, group= 1))+ 
-  geom_line()
-#^^^^
-
-
-
-
-
-#---------------------------------------------------------------------------------------#
-#-----------------------------GR?FICA DE INGRESOS_CENTRAL-------------------------------#
-#---------------------------------------------------------------------------------------#
-
-
-INGRESOS_CENTRAL <- margen_detalles %>% 
-  select( ID_TIPO_PREVISION,FC_PERIODO, ID_UPR,ID_CENTRAL, ID_TECNOLOGIA, VALOR) %>%
-  filter(ID_TIPO_PREVISION == 'REAL') %>% 
-  filter(ID_CENTRAL != '') %>% 
-  drop_na() %>% 
-  filter(VALOR > 0) %>% 
-  group_by(ID_CENTRAL, ID_TECNOLOGIA) %>% 
-  summarise(VALOR=sum(VALOR)) %>%
-  arrange(VALOR) %>% 
-  
-  ggplot(aes(x=reorder(ID_CENTRAL, -VALOR), y=VALOR ,color=ID_TECNOLOGIA, fill=ID_TECNOLOGIA))+ 
-  geom_bar(stat="identity")+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  geom_hline(yintercept = 0)+
-  theme(legend.position = "top")+
-  ggtitle("INGRESOS_CENTRAL")
-
-INGRESOS_CENTRAL
-
-
-#---------------------------------------------------------------------------------------#
-#------------------------------GR?FICA DE COSTES_CENTRAL--------------------------------#
+#----------------------------- Technology margin graph ---------------------------------#
 #---------------------------------------------------------------------------------------#
 
 
 
-COSTES_CENTRAL <- margen_detalles %>% 
-  select( ID_TIPO_PREVISION,FC_PERIODO, ID_UPR,ID_CENTRAL, ID_TECNOLOGIA, VALOR) %>%
-  filter(ID_TIPO_PREVISION == 'REAL') %>% 
-  filter(ID_CENTRAL != '') %>% 
-  drop_na() %>% 
-  filter(VALOR < 0) %>% 
-  group_by(ID_CENTRAL, ID_TECNOLOGIA) %>% 
-  summarise(VALOR=sum(VALOR)) %>%
-  arrange(VALOR) %>% 
-  
-  ggplot(aes(x=reorder(ID_CENTRAL, -VALOR), y=VALOR ,color=ID_TECNOLOGIA, fill=ID_TECNOLOGIA))+ 
-  geom_bar(stat="identity")+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  geom_hline(yintercept = 0)+
-  theme(legend.position = "top")+
-  ggtitle("COSTES_CENTRAL")
-
-COSTES_CENTRAL
-
-
-
-#---------------------------------------------------------------------------------------#
-#----------------------------GR?FICA DE MARGEN_TECNOLOGIA-------------------------------#
-#---------------------------------------------------------------------------------------#
-
-
-
-MARGEN_TECNOLOGIA <- margen_detalles %>% 
-  select( ID_TIPO_PREVISION,FC_PERIODO, ID_UPR,ID_CENTRAL, ID_TECNOLOGIA, VALOR) %>%
-  filter(ID_TIPO_PREVISION == 'REAL') %>% 
-  filter(ID_CENTRAL != '') %>% 
+Technolgy_inspection <- Amount_Inspection %>% 
+  select(VERSION, ID_UPR, ID_TECNOLOGIA, VALOR) %>%
   drop_na() %>% 
   group_by(ID_TECNOLOGIA) %>% 
   summarise(VALOR=sum(VALOR)) %>%
   arrange(VALOR) %>% 
-  
   ggplot(aes(x=reorder(ID_TECNOLOGIA, -VALOR), y=VALOR ,color=ID_TECNOLOGIA, fill=ID_TECNOLOGIA))+ 
   geom_bar(stat="identity")+
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   geom_hline(yintercept = 0)+
   theme(legend.position = "top")+
-  ggtitle("MARGEN_TECNOLOGIA")
+  ggtitle("Technolgy_inspection")
 
-MARGEN_TECNOLOGIA
+Technolgy_inspection
 
 
 
 #---------------------------------------------------------------------------------------#
-#------------------------------GR?FICA DE MARGEN_CONCEPTO--------------------------------#
+#------------------------------- Concept Margin Graph ----------------------------------#
 #---------------------------------------------------------------------------------------#
 
 
-
-min<-margen_detalles[which.min(margen_detalles$VALOR),]
-max<-margen_detalles[which.max(margen_detalles$VALOR),]
-
-
-MARGEN_CONCEPTO <- margen_detalles %>% 
-  select( ID_TIPO_PREVISION,FC_PERIODO, ID_UPR,ID_CENTRAL, ID_TECNOLOGIA,ID_CONCEPTO, VALOR) %>%
-  filter(ID_TIPO_PREVISION == 'REAL') %>% 
-  filter(ID_CONCEPTO != '') %>% 
+Concept_Inspection <- Amount_Inspection %>% 
+  select(VERSION, ID_UPR, ID_TECNOLOGIA,ID_CONCEPTO_CTRL, VALOR) %>%
+  filter(ID_CONCEPTO_CTRL != '') %>% 
   drop_na() %>% 
-  group_by(FC_PERIODO, ID_CONCEPTO) %>% 
+  group_by(VERSION, ID_CONCEPTO_CTRL) %>% 
   summarise(VALOR=sum(VALOR)) %>%
   filter(VALOR < 1000000000 & VALOR > -1000000000) %>%
-  ggplot(aes(x = FC_PERIODO, y = VALOR)) +
-  geom_line(aes(linetype=ID_CONCEPTO, color=ID_CONCEPTO))+
+  ggplot(aes(x = VERSION, y = VALOR)) +
+  geom_line(aes(linetype=ID_CONCEPTO_CTRL, color=ID_CONCEPTO_CTRL))+
   geom_point() + 
-  geom_point(aes(color=ID_CONCEPTO))+
+  geom_point(aes(color=ID_CONCEPTO_CTRL))+
   geom_hline(yintercept = 0)+
   theme(legend.position = "top") +
-  ggtitle("MARGEN_CONCEPTO")
+  ggtitle("Concept_Margin")
 
 
-MARGEN_CONCEPTO
-
-
-
-
-
-MERCADOS <- margen_detalles %>% 
-  select( ID_TIPO_PREVISION,FC_PERIODO, ID_UPR,ID_CENTRAL, ID_TECNOLOGIA, ID_CONCEPTO, VALOR) %>%
-  filter(ID_TIPO_PREVISION == 'REAL') %>% 
-  filter(ID_CONCEPTO %in% c(MMDD,MMPP))
-
-COSTES <- margen_detalles %>% 
-  select( ID_TIPO_PREVISION,FC_PERIODO, ID_UPR,ID_CENTRAL, ID_TECNOLOGIA, ID_CONCEPTO, VALOR) %>%
-  filter(ID_TIPO_PREVISION == 'REAL') %>% 
-  filter(!ID_CONCEPTO %in% c(MMDD,MMPP))
+Concept_Inspection
 
 
 
