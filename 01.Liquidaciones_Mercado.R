@@ -26,11 +26,48 @@ library(R.utils)
 
 rm(list.of.packages,new.packages)
 
-data_path <- str_c(getwd(),"/Imports/ORIGIN_MARKET_LIQUIDATIONS.csv", sep = "", collapse = NULL)
-#data_path <- "WORK_QUERY_FOR_V_TH_LIQ_OPERAC.csv"
-#data_path <- "WORK_QUERY_FOR_V_TH_LIQ_OPERAC_ELECT_.csv"
 
-#data_path <- readline(prompt="Enter name of the file")
+
+###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+# we create here the structure of this TFM where there will be all the files needed.
+
+startfolder <- getwd()
+Importation_folder <- 'Imports'
+Exportation_folder <- 'Outputs'
+
+dir.create(file.path(getwd(), Importation_folder), showWarnings = FALSE)
+dir.create(file.path(getwd(), Exportation_folder), showWarnings = FALSE)
+
+
+setwd(file.path(getwd(), Importation_folder))
+#download file ORIGIN_COSTS_E4E.xlsx
+download.file(url='https://drive.google.com/uc?id=1MwFiS4Q-2qSOVgp9ume7EG9KbrKA__T1&export=download&authuser=0',
+              destfile='ORIGIN_COSTS_E4E.xlsx')
+#download file ORIGIN_NC_WASTES_201712.xlsx
+download.file(url='https://drive.google.com/uc?id=17s2lFF7e4KdsasFkBN9uXjmnP8me7up_&export=download&authuser=0',
+              destfile='ORIGIN_NC_WASTES_201712.xlsx')
+#download file ORIGIN_NC_WASTES_201812.xlsx
+download.file(url='https://drive.google.com/uc?id=1jKaoGe-LRXlry8TJvHsr9wknN599FCNW&export=download&authuser=0',
+              destfile='ORIGIN_NC_WASTES_201812.xlsx')
+#download file ORIGIN_MARKET_LIQUIDATIONS.csv
+download.file(url='https://drive.google.com/uc?id=1ajTx9jKzpOzUIeYzN-6mRVUrmnW0iNxO&export=download&authuser=0',
+              destfile='ORIGIN_MARKET_LIQUIDATIONS.csv')
+
+
+
+setwd(file.path(startfolder))
+rm(startfolder, Importation_folder, Exportation_folder)
+
+###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+
+
+
+
+data_path <- str_c(getwd(),"/Imports/ORIGIN_MARKET_LIQUIDATIONS.csv", sep = "", collapse = NULL)
 
 
 #since the file is sensibly larger than the memory of my pc, I proceed to import only 1000 rows to check what's

@@ -27,6 +27,7 @@ library(xlsx)
 rm(list.of.packages,new.packages)
 
 
+
 # To create the Integrated Margin of generation, we need the data from every cost realted to power generation
 # Unfortunately, this information comes directly from SAP, and it's structure is by monthly acumulated information.
 # that means that the value from March 2018, is in fact the value of January + February + March.
